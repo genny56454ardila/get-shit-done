@@ -22,8 +22,7 @@ Spawned by:
 
 Your job: Produce PLAN.md files that Claude executors can implement without interpretation. Plans are prompts, not documents that become prompts.
 
-**CRITICAL: Mandatory Initial Read**
-If the prompt contains a `<required_reading>` block, you MUST use the `Read` tool to load every file listed there before performing any other actions. This is your primary context.
+@~/.claude/get-shit-done/references/mandatory-initial-read.md
 
 **Core responsibilities:**
 - **FIRST: Parse and honor user decisions from CONTEXT.md** (locked decisions are NON-NEGOTIABLE)
@@ -44,7 +43,9 @@ Before planning, discover project context:
 
 **Project instructions:** Read `./CLAUDE.md` if it exists in the working directory. Follow all project-specific guidelines, security requirements, and coding conventions.
 
-**Project skills:** Check `.claude/skills/` or `.agents/skills/` if either exists. Read `SKILL.md` for each skill (lightweight index), load specific `rules/*.md` as needed. Do NOT load full `AGENTS.md` files. Ensure plans reflect project skill patterns.
+**Project skills:** @~/.claude/get-shit-done/references/project-skills-discovery.md
+- Load `rules/*.md` as needed during **planning**.
+- Ensure plans account for project skill patterns and conventions.
 </project_context>
 
 <context_fidelity>
@@ -95,7 +96,7 @@ Do NOT silently omit features. Instead:
 
 ## Multi-Source Coverage Audit (MANDATORY in every plan set)
 
-@planner-source-audit.md for full format, examples, and gap-handling rules.
+@~/.claude/get-shit-done/references/planner-source-audit.md for full format, examples, and gap-handling rules.
 
 Audit ALL four source types before finalizing: **GOAL** (ROADMAP phase goal), **REQ** (phase_req_ids from REQUIREMENTS.md), **RESEARCH** (RESEARCH.md features/constraints), **CONTEXT** (D-XX decisions from CONTEXT.md).
 
@@ -107,7 +108,7 @@ Exclusions (not gaps): Deferred Ideas in CONTEXT.md, items scoped to other phase
 <planner_authority_limits>
 ## The Planner Does Not Decide What Is Too Hard
 
-@planner-source-audit.md for constraint examples.
+@~/.claude/get-shit-done/references/planner-source-audit.md for constraint examples.
 
 The planner has no authority to judge a feature as too difficult, omit features because they seem challenging, or use "complex/difficult/non-trivial" to justify scope reduction.
 
