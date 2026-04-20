@@ -9,12 +9,21 @@
  * get-shit-done/workflows/update.md (comment with e.g. ~/.claude).
  */
 
-process.env.GSD_TEST_MODE = '1';
-
-const { describe, test } = require('node:test');
+const { describe, test, after } = require('node:test');
 const assert = require('node:assert/strict');
 
+// Must be set before require('../bin/install.js') so the installer skips
+// its top-level side-effects in test mode.
+const PREV_GSD_TEST_MODE = process.env.GSD_TEST_MODE;
+process.env.GSD_TEST_MODE = '1';
+
 const { convertClaudeToAntigravityContent } = require('../bin/install.js');
+
+// Restore after all tests in this file so concurrent test files are not affected.
+after(() => {
+  if (PREV_GSD_TEST_MODE === undefined) delete process.env.GSD_TEST_MODE;
+  else process.env.GSD_TEST_MODE = PREV_GSD_TEST_MODE;
+});
 
 describe('convertClaudeToAntigravityContent bare path replacement (#2418)', () => {
   describe('global install', () => {
