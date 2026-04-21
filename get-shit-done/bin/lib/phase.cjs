@@ -888,6 +888,30 @@ function cmdPhaseComplete(cwd, phaseNum, raw) {
             );
           }
 
+          // Diff: scan body for all **REQ-ID** patterns, warn about any missing from the Traceability table
+          const bodyReqIds = [];
+          const bodyReqPattern = /\*\*([A-Z][A-Z0-9]*-\d+)\*\*/g;
+          let bodyMatch;
+          while ((bodyMatch = bodyReqPattern.exec(reqContent)) !== null) {
+            const id = bodyMatch[1];
+            if (!bodyReqIds.includes(id)) bodyReqIds.push(id);
+          }
+
+          // Collect REQ-IDs already present in the Traceability table
+          const tableReqIds = new Set();
+          const tableRowPattern = /^\|\s*([A-Z][A-Z0-9]*-\d+)\s*\|/gm;
+          let tableMatch;
+          while ((tableMatch = tableRowPattern.exec(reqContent)) !== null) {
+            tableReqIds.add(tableMatch[1]);
+          }
+
+          const unregistered = bodyReqIds.filter(id => !tableReqIds.has(id));
+          if (unregistered.length > 0) {
+            warnings.push(
+              `REQUIREMENTS.md: ${unregistered.length} REQ-ID(s) found in body but missing from Traceability table: ${unregistered.join(', ')} — add them manually to keep traceability in sync`
+            );
+          }
+
           atomicWriteFileSync(reqPath, reqContent);
           requirementsUpdated = true;
         }
