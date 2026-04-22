@@ -64,7 +64,25 @@ AGENT_SKILLS_SYNTHESIZER=$(gsd-sdk query agent-skills gsd-synthesizer 2>/dev/nul
 AGENT_SKILLS_ROADMAPPER=$(gsd-sdk query agent-skills gsd-roadmapper 2>/dev/null)
 ```
 
-Parse JSON for: `researcher_model`, `synthesizer_model`, `roadmapper_model`, `commit_docs`, `project_exists`, `has_codebase_map`, `planning_exists`, `has_existing_code`, `has_package_file`, `is_brownfield`, `needs_codebase_map`, `has_git`, `project_path`.
+Parse JSON for: `researcher_model`, `synthesizer_model`, `roadmapper_model`, `commit_docs`, `project_exists`, `has_codebase_map`, `planning_exists`, `has_existing_code`, `has_package_file`, `is_brownfield`, `needs_codebase_map`, `has_git`, `project_path`, `agents_installed`.
+
+**If `agents_installed` is `false`:** Warn the user before proceeding:
+
+```
+⚠️  Agents are not installed — subagent spawning will fail with "agent type not found".
+Run the GSD installer to install agents globally:
+  npx get-shit-done-cc --claude --global
+Without agents installed, research and roadmap steps cannot run.
+```
+
+Ask via AskUserQuestion:
+- header: "Missing Agents"
+- question: "GSD agents are not installed. Subagent spawning will fail. How do you want to proceed?"
+- options:
+  - "Continue anyway" — I will install agents before research/roadmap steps
+  - "Cancel" — Let me install agents first, then return
+
+**If "Cancel":** Exit. **If "Continue anyway":** Proceed with the workflow but note that spawning steps may fail until agents are installed.
 
 **Detect runtime and set instruction file name:**
 
