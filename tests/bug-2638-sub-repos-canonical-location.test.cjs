@@ -140,4 +140,80 @@ describe('bug #2638 — sub_repos canonical location', () => {
     );
     assert.deepStrictEqual(after.planning?.sub_repos, ['backend']);
   });
+
+  test('rescue: top-level sub_repos seeds planning.sub_repos when canonical slot is empty', () => {
+    makeSubRepo(tmpDir, 'backend');
+    writeConfig(tmpDir, {
+      sub_repos: ['backend'],
+    });
+
+    loadConfig(tmpDir);
+
+    const after = readConfig(tmpDir);
+    assert.strictEqual(
+      Object.prototype.hasOwnProperty.call(after, 'sub_repos'),
+      false,
+      'top-level sub_repos must be removed after rescue'
+    );
+    assert.deepStrictEqual(
+      after.planning?.sub_repos,
+      ['backend'],
+      'top-level value must be promoted to planning.sub_repos'
+    );
+    assert.ok(
+      !stderrCapture.includes('unknown config key'),
+      `rescue path should not warn, got: ${stderrCapture}`
+    );
+  });
+
+  test('conflict resolution: canonical planning.sub_repos wins when both set with different values', () => {
+    makeSubRepo(tmpDir, 'backend');
+    makeSubRepo(tmpDir, 'frontend');
+    // Stale top-level disagrees with canonical; canonical (planning.sub_repos)
+    // is the source of truth per #2561 and must be preserved.
+    writeConfig(tmpDir, {
+      sub_repos: ['stale-old-name'],
+      planning: { sub_repos: ['backend', 'frontend'] },
+    });
+
+    loadConfig(tmpDir);
+
+    const after = readConfig(tmpDir);
+    assert.strictEqual(
+      Object.prototype.hasOwnProperty.call(after, 'sub_repos'),
+      false,
+      'stale top-level sub_repos must be discarded'
+    );
+    assert.deepStrictEqual(
+      after.planning?.sub_repos,
+      ['backend', 'frontend'],
+      'canonical planning.sub_repos must win over stale top-level on conflict'
+    );
+  });
+
+  test('idempotent: a second loadConfig on an already-canonical config is a no-op', () => {
+    makeSubRepo(tmpDir, 'backend');
+    makeSubRepo(tmpDir, 'frontend');
+    writeConfig(tmpDir, {
+      planning: { sub_repos: ['backend', 'frontend'] },
+    });
+
+    loadConfig(tmpDir);
+    const firstPass = fs.readFileSync(
+      path.join(tmpDir, '.planning', 'config.json'),
+      'utf-8'
+    );
+
+    loadConfig(tmpDir);
+    const secondPass = fs.readFileSync(
+      path.join(tmpDir, '.planning', 'config.json'),
+      'utf-8'
+    );
+
+    assert.strictEqual(
+      firstPass,
+      secondPass,
+      'second loadConfig must not modify an already-canonical config'
+    );
+  });
 });
