@@ -269,12 +269,50 @@ const CONFIG_DEFAULTS = {
   post_planning_gaps: true, // workflow.post_planning_gaps — unified post-planning gap report (#2493): scan REQUIREMENTS.md + CONTEXT.md decisions vs all PLAN.md files
 };
 
+/**
+ * Deep-merge two config objects. `overlay` wins on key conflict; nested
+ * objects are merged recursively. Arrays and primitives in `overlay`
+ * replace the corresponding value in `base` entirely (no array merge).
+ *
+ * Used by loadConfig to inherit root .planning/config.json into a
+ * workstream config when GSD_WORKSTREAM is set (#2714).
+ */
+function _deepMergeConfig(base, overlay) {
+  if (overlay === null || overlay === undefined) return base;
+  if (base === null || base === undefined) return overlay;
+  if (typeof base !== 'object' || typeof overlay !== 'object') return overlay;
+  if (Array.isArray(base) || Array.isArray(overlay)) return overlay;
+  const out = { ...base };
+  for (const k of Object.keys(overlay)) {
+    out[k] = _deepMergeConfig(base[k], overlay[k]);
+  }
+  return out;
+}
+
 function loadConfig(cwd) {
   const configPath = path.join(planningDir(cwd), 'config.json');
+  const rootConfigPath = path.join(planningRoot(cwd), 'config.json');
   const defaults = CONFIG_DEFAULTS;
 
+  // Inherit-from-root (#2714): when GSD_WORKSTREAM is active, read the root
+  // config and the workstream config, deep-merge with workstream-wins. If the
+  // workstream config is missing, fall back to root entirely. Workstream
+  // settings override root for shared keys; unset keys inherit from root.
+  let inheritedRaw = null;
+  if (configPath !== rootConfigPath && process.env.GSD_WORKSTREAM) {
+    let rootObj = null;
+    let wsObj = null;
+    try { rootObj = JSON.parse(fs.readFileSync(rootConfigPath, 'utf-8')); } catch { /* no root config */ }
+    try { wsObj = JSON.parse(fs.readFileSync(configPath, 'utf-8')); } catch { /* no ws config */ }
+    if (rootObj && wsObj) {
+      inheritedRaw = JSON.stringify(_deepMergeConfig(rootObj, wsObj));
+    } else if (rootObj && !wsObj) {
+      inheritedRaw = JSON.stringify(rootObj);
+    }
+  }
+
   try {
-    const raw = fs.readFileSync(configPath, 'utf-8');
+    const raw = inheritedRaw || fs.readFileSync(configPath, 'utf-8');
     const parsed = JSON.parse(raw);
 
     // Migrate deprecated "depth" key to "granularity" with value mapping
