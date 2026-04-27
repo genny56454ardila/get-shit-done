@@ -48,7 +48,12 @@
     "collectCoverageFrom": [
       "src/**/*.js",
       "!src/index.js"
-    ]
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 80
+      }
+    }
   },
   "repository": {
     "type": "git",
