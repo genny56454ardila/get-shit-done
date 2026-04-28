@@ -26,7 +26,7 @@ program
   .alias('block')
   .description('Start a work session and block distracting sites')
   .option('-p, --profile <profile>', 'use a specific blocking profile', 'default')
-  .option('-t, --timer <minutes>', 'automatically unblock after N minutes', '25') // default to a pomodoro session
+  .option('-t, --timer <minutes>', 'automatically unblock after N minutes', '50') // I prefer 50/10 over pomodoro's 25/5
   .action(async (options) => {
     try {
       await block(options);
